@@ -20,7 +20,9 @@ from graph import Digraph, Node, WeightedEdge
 # represented?
 #
 # Answer:
-#
+# The nodes represent each building at MIT. The graph edges are a 4-tuple consisting of the two building nodes, 
+# the distance from the 1st building to the 2nd building, and lastly the value how much of that distance is outdoor.
+# Because of this, distances are represented as weights of the graph edges.
 
 
 # Problem 2b: Implementing load_map
@@ -42,9 +44,37 @@ def load_map(map_filename):
     Returns:
         a Digraph representing the map
     """
-
-    # TODO
     print("Loading map from file...")
+    map_graph = Digraph()
+    with open(map_filename, 'r') as file:
+        
+        #get values for each entry
+        line = file.readline()
+        line_split = line.split()
+        
+        while len(line) != 0: 
+            
+            #add nodes first
+            node1 = Node(line_split[0])
+            node2 = Node(line_split[1])
+            for node in (node1, node2):
+                try:
+                    map_graph.add_node(node)
+                except ValueError:
+                    pass
+            
+            #add edge
+            weight_edge = WeightedEdge(node1,
+                                       node2, 
+                                       int(line_split[-2]),
+                                       int(line_split[-1])
+                                      )                
+            map_graph.add_edge(weight_edge)
+            line = file.readline() #get next line
+            line_split = line.split()
+    
+    print('Loading Done!')
+    return map_graph
 
 # Problem 2c: Testing load_map
 # Include the lines used to test load_map below, but comment them out
@@ -57,8 +87,14 @@ def load_map(map_filename):
 #
 # What is the objective function for this problem? What are the constraints?
 #
-# Answer:
-#
+# Answer: The objective function is the sum of the distance weights of the path taken. In other words, the total distance
+#         travelled on the path taken.
+#         The constraint would be first the total distance cannot exceed the maximum distance outdoors,
+#         and we look at optimising given fixed first and last nodes. 
+
+# The algorithm is made more difficult by the fact path, start and end are string inputs rather than node objects.
+# DFS is more optimised if one includes a current distance/outdoor distance argument which keeps track, so this does not
+# have to be recomputed at each level of recursion.
 
 # Problem 3b: Implement get_best_path
 def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
@@ -95,8 +131,52 @@ def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
         If there exists no path that satisfies max_total_dist and
         max_dist_outdoors constraints, then return None.
     """
-    # TODO
-    pass
+    start_node = Node(start)
+    end_node = Node(end)
+    path = path + [start]
+
+    #get distances of current path
+    dist_outdoors = 0
+    dist = 0
+    for j in range(len(path)-1):
+                path_edges = digraph.get_edges_for_node(Node(path[j]))
+                for path_edge in path_edges:
+                        if path_edge.get_destination() == Node(path[j+1]):
+                            dist_outdoors += path_edge.get_outdoor_distance()
+                            dist += path_edge.get_total_distance()
+
+    #outdoor constraint
+    if dist_outdoors > max_dist_outdoors:
+        return (best_path, best_dist)
+
+    #check if start and end nodes are in the digraph
+    if (digraph.has_node(start_node) == False or 
+        digraph.has_node(end_node) == False):
+        raise TypeError('The start and end should be in the Digraph')
+    #trivial case
+    elif start_node == end_node:
+            return (path, dist)
+    
+    else:
+        #get edges in a start node
+        start_node_edges = digraph.get_edges_for_node(start_node)
+
+        #loop over each child node/edge
+        for start_edge in start_node_edges:
+            child_node = start_edge.get_destination()
+            child = child_node.get_name()
+            # avoid cycles, check node not in path
+            if child not in path:
+                #do not exceed current optimum path
+                if (best_path == None) or dist < best_dist:
+                        new_path, new_distance = get_best_path(digraph, child, end, path, 
+                                                            max_dist_outdoors, best_dist, best_path)
+                        #finding new path, ensure distance still below constraint
+                        if new_path != None and new_distance < best_dist:
+                            best_path = new_path
+                            best_dist = new_distance
+        
+    return (best_path, best_dist)
 
 
 # Problem 3c: Implement directed_dfs
@@ -128,8 +208,14 @@ def directed_dfs(digraph, start, end, max_total_dist, max_dist_outdoors):
         If there exists no path that satisfies max_total_dist and
         max_dist_outdoors constraints, then raises a ValueError.
     """
-    # TODO
-    pass
+    optimum_path, optimum_dist = get_best_path(digraph, start, end, [], 
+                                               max_dist_outdoors, 
+                                               float('inf'),
+                                               None)
+    if optimum_dist <= max_total_dist:
+         return optimum_path
+    else:
+         raise ValueError('No path exists which fits given constraints')
 
 
 # ================================================================
