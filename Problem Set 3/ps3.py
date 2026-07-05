@@ -61,6 +61,10 @@ class Position(object):
     def __str__(self):  
         return "Position: " + str(math.floor(self.x)) + ", " + str(math.floor(self.y))
 
+# in Problem 1, I use a dictionary to store tiles and their dirt values. The dictionary structure 
+# gives immense benefit for lookup, iteration and updating values. The one caveat to be careful of 
+# is that tiles with furniture on them are not removed from the dictionary, but should in principle
+# remain untouched, so they have no meaning.
 
 # === Problem 1
 class RectangularRoom(object):
