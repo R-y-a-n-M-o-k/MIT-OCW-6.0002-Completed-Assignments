@@ -164,6 +164,7 @@ def generate_models(x, y, degs):
         that minimizes the squared error of the fitting polynomial
     """
     p_vals = []
+    #for each model degree, fit model to data
     for deg in degs:
         p = pylab.polyfit(x, y, deg)
         p_vals.append(p)
@@ -264,6 +265,7 @@ def gen_cities_avg(climate, multi_cities, years):
         this array corresponds to the average annual temperature over the given
         cities for a given year.
     """
+    #iterate get avg temp in a year for multiple cities
     years_temp_avg = []
     for year in years:
         year_length = len(climate.get_yearly_temp(multi_cities[0], year))
@@ -339,6 +341,7 @@ def gen_std_devs(climate, multi_cities, years):
         this array corresponds to the standard deviation of the average annual 
         city temperatures for the given cities in a given year.
     """
+    #iterate to get stdev over each year
     stdev_years = []
     for year in years:
         year_length = len(climate.get_yearly_temp(multi_cities[0], year))
@@ -380,9 +383,10 @@ def evaluate_models_on_testing(x, y, models):
     Returns:
         None
     """
+    #for each model, plot test data and estimated
     for model in models:
         estimated = pylab.polyval(model, x)
-        model_rmse = rmse(y, estimated)
+        model_rmse = rmse(y, estimated) #compute rmse 
         deg = len(model)-1
 
         pylab.figure()

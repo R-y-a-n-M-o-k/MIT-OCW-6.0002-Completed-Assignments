@@ -328,6 +328,7 @@ def calc_pop_std(populations, t):
     num_trials = len(populations)
     pop_avg = calc_pop_avg(populations, t)
     stdev_sum = 0
+    #iterate to sum squares of deviations
     for bacteria_pop in populations:
         stdev_sum = (bacteria_pop[t]-pop_avg)**2
 
